@@ -1,0 +1,3 @@
+# Zależności Pythona (uzupełniane w kolejnych labach)
+# Lab 3: python-docx
+# LibreOffice instalowane systemowo (nie przez pip)

@@ -1,0 +1,26 @@
+[
+  {
+    "imie": "Anna",
+    "nazwisko": "Kowalska",
+    "miasto": "Kraków",
+    "uwagi": ""
+  },
+  {
+    "imie": "Jan",
+    "nazwisko": "Nowak",
+    "miasto": "Gdańsk",
+    "uwagi": "brak"
+  },
+  {
+    "imie": "Żaneta",
+    "nazwisko": "Łukaszewicz",
+    "miasto": "Łódź",
+    "uwagi": "preferuje e-mail"
+  },
+  {
+    "imie": "Marek",
+    "nazwisko": "Wójcik",
+    "miasto": "Wrocław",
+    "uwagi": "telefon: +48 123"
+  }
+]

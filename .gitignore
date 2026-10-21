@@ -1,0 +1,28 @@
+# Środowisko wirtualne
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Testy / IDE
+.pytest_cache/
+.mypy_cache/
+.idea/
+.vscode/
+*.swp
+
+# System
+.DS_Store
+Thumbs.db
+
+# Wyniki konwersji (opcjonalnie lokalne)
+output/
+*.log
