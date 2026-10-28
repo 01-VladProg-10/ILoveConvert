@@ -10,8 +10,8 @@ we wskazanym katalogu.
 |-------|----------|--------|-----------|
 | A | CSV → JSON | działa (CLI) | stdlib (`csv`, `json`) |
 | A | JSON → CSV | działa (CLI) | stdlib (`csv`, `json`) |
-| B | TXT → DOCX | planowane (Lab 3) | `python-docx` |
-| B | DOCX → TXT | planowane (Lab 3) | `python-docx` |
+| B | TXT → DOCX | działa (CLI) | `python-docx` |
+| B | DOCX → TXT | działa (CLI) | `python-docx` |
 | C | DOCX → PDF | planowane (Lab 3) | LibreOffice headless |
 | C | ODT → PDF | planowane (Lab 3) | LibreOffice headless |
 
@@ -22,11 +22,18 @@ we wskazanym katalogu.
 - CSV: pierwszy wiersz = nagłówki; kolejność kolumn zachowana
 - Puste wartości są dozwolone
 
+### Semantyka TXT / DOCX
+
+- Kodowanie TXT: **UTF-8**
+- TXT → DOCX: każda linia staje się akapitem
+- DOCX → TXT: każdy akapit trafia do osobnej linii
+- Złożone formatowanie (style, tabele, obrazy) **nie** jest zachowywane
+
 ## Wymagania
 
 - Python 3.10+
+- `python-docx` (patrz `requirements.txt`)
 - (później) LibreOffice — do konwersji DOCX/ODT → PDF
-- zależności z `requirements.txt`
 
 ## Instalacja i uruchomienie
 
@@ -39,12 +46,17 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### CLI (Lab 2 — bez GUI)
+### CLI (bez GUI)
 
 ```bash
+# Grupa A
 python run_cli.py data/sample.csv .json output
 python run_cli.py data/sample.json .csv output
 python run_cli.py data/sample_bad.json .csv output
+
+# Grupa B
+python run_cli.py data/sample.txt .docx output
+python run_cli.py output/sample.docx .txt output
 ```
 
 ## Struktura projektu

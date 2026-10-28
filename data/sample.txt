@@ -1,0 +1,7 @@
+Uniwersalny konwerter plików — przykładowy tekst.
+
+Pierwszy akapit: ąćęłńóśźż ĄĆĘŁŃÓŚŹŻ.
+Drugi akapit zawiera polskie znaki i zwykły tekst.
+
+Pusta linia powyżej.
+Koniec pliku.
