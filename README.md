@@ -12,8 +12,8 @@ we wskazanym katalogu.
 | A | JSON → CSV | działa (CLI) | stdlib (`csv`, `json`) |
 | B | TXT → DOCX | działa (CLI) | `python-docx` |
 | B | DOCX → TXT | działa (CLI) | `python-docx` |
-| C | DOCX → PDF | planowane (Lab 3) | LibreOffice headless |
-| C | ODT → PDF | planowane (Lab 3) | LibreOffice headless |
+| C | DOCX → PDF | działa (CLI) | LibreOffice headless |
+| C | ODT → PDF | działa (CLI) | LibreOffice headless |
 
 ### Semantyka CSV / JSON
 
@@ -29,11 +29,24 @@ we wskazanym katalogu.
 - DOCX → TXT: każdy akapit trafia do osobnej linii
 - Złożone formatowanie (style, tabele, obrazy) **nie** jest zachowywane
 
+### Semantyka DOCX/ODT → PDF
+
+- Konwersja przez LibreOffice (`--headless`), **bez** `shell=True`
+- Sprawdzany jest kod zakończenia procesu oraz istnienie pliku PDF
+- Identyczny układ stron / złożone formatowanie nie jest gwarantowane
+
 ## Wymagania
 
 - Python 3.10+
 - `python-docx` (patrz `requirements.txt`)
-- (później) LibreOffice — do konwersji DOCX/ODT → PDF
+- **LibreOffice** zainstalowane systemowo (do PDF)
+
+### LibreOffice
+
+1. Zainstaluj LibreOffice: https://www.libreoffice.org/
+2. Albo ustaw `LIBREOFFICE_PATH` na pełną ścieżkę do `soffice.exe` / `soffice`, np.:
+   - Windows: `C:\Program Files\LibreOffice\program\soffice.exe`
+   - Linux: `/usr/bin/soffice` lub `/usr/bin/libreoffice`
 
 ## Instalacja i uruchomienie
 
@@ -56,7 +69,11 @@ python run_cli.py data/sample_bad.json .csv output
 
 # Grupa B
 python run_cli.py data/sample.txt .docx output
-python run_cli.py output/sample.docx .txt output
+python run_cli.py data/sample.docx .txt output
+
+# Grupa C (wymaga LibreOffice)
+python run_cli.py data/sample.docx .pdf output
+python run_cli.py data/sample.odt .pdf output
 ```
 
 ## Struktura projektu
@@ -64,6 +81,7 @@ python run_cli.py output/sample.docx .txt output
 ```
 converter/           # logika konwersji (bez GUI)
   registry.py        # rejestr, walidacja, execute
+  libreoffice.py     # wykrywanie soffice
   converters/        # konkretne konwertery
 data/                # przykładowe dane testowe
 gui/                 # interfejs Tkinter (Lab 4)
