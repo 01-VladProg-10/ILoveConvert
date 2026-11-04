@@ -8,12 +8,12 @@ we wskazanym katalogu.
 
 | Grupa | Kierunek | Status | Narzędzie |
 |-------|----------|--------|-----------|
-| A | CSV → JSON | działa (CLI) | stdlib (`csv`, `json`) |
-| A | JSON → CSV | działa (CLI) | stdlib (`csv`, `json`) |
-| B | TXT → DOCX | działa (CLI) | `python-docx` |
-| B | DOCX → TXT | działa (CLI) | `python-docx` |
-| C | DOCX → PDF | działa (CLI) | LibreOffice headless |
-| C | ODT → PDF | działa (CLI) | LibreOffice headless |
+| A | CSV → JSON | działa | stdlib (`csv`, `json`) |
+| A | JSON → CSV | działa | stdlib (`csv`, `json`) |
+| B | TXT → DOCX | działa | `python-docx` |
+| B | DOCX → TXT | działa | `python-docx` |
+| C | DOCX → PDF | działa | LibreOffice headless |
+| C | ODT → PDF | działa | LibreOffice headless |
 
 ### Semantyka CSV / JSON
 
@@ -40,6 +40,7 @@ we wskazanym katalogu.
 - Python 3.10+
 - `python-docx` (patrz `requirements.txt`)
 - **LibreOffice** zainstalowane systemowo (do PDF)
+- Tkinter (zwykle w standardowej instalacji Pythona)
 
 ### LibreOffice
 
@@ -58,6 +59,14 @@ venv\Scripts\activate
 # source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### GUI
+
+```bash
+python main.py
+```
+
+Wybierz plik → katalog zapisu → format z listy (tylko dozwolone pary) → **Konwertuj**.
 
 ### CLI (bez GUI)
 
@@ -83,9 +92,11 @@ converter/           # logika konwersji (bez GUI)
   registry.py        # rejestr, walidacja, execute
   libreoffice.py     # wykrywanie soffice
   converters/        # konkretne konwertery
+gui/                 # interfejs Tkinter
+  app.py
 data/                # przykładowe dane testowe
-gui/                 # interfejs Tkinter (Lab 4)
 tests/               # testy (Lab 5)
+main.py              # uruchomienie GUI
 run_cli.py           # demonstracja bez GUI
 ```
 
