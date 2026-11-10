@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 import converter.converters  # noqa: F401 — rejestracja konwerterów
-from converter.registry import ConversionRequest, available_targets, execute
+from converter.registry import (
+    ConversionRequest,
+    available_targets,
+    execute,
+    planned_output,
+)
 
 
 class ConverterApp(ttk.Frame):
@@ -18,6 +24,7 @@ class ConverterApp(ttk.Frame):
         self.output_dir = tk.StringVar()
         self.target_format = tk.StringVar()
         self.status = tk.StringVar(value="Gotowy — wybierz plik wejściowy.")
+        self._busy = False
 
         self._build()
         self.pack(fill=tk.BOTH, expand=True)
@@ -83,45 +90,97 @@ class ConverterApp(ttk.Frame):
         if targets:
             self.target_format.set(targets[0])
             self.status.set(f"Dostępne formaty: {', '.join(targets)}")
-            self.convert_btn.state(["!disabled"])
+            if not self._busy:
+                self.convert_btn.state(["!disabled"])
         else:
             self.target_format.set("")
             self.status.set("Brak obsługiwanych formatów dla tego pliku.")
             self.convert_btn.state(["disabled"])
 
+    def _set_busy(self, busy: bool) -> None:
+        self._busy = busy
+        if busy:
+            self.convert_btn.state(["disabled"])
+        elif self.target_format.get():
+            self.convert_btn.state(["!disabled"])
+        else:
+            self.convert_btn.state(["disabled"])
+
     def _convert(self) -> None:
-        source = Path(self.source_path.get().strip())
-        output = Path(self.output_dir.get().strip())
+        if self._busy:
+            return
+
+        source_raw = self.source_path.get().strip()
+        output_raw = self.output_dir.get().strip()
         target = self.target_format.get().strip()
 
-        if not self.source_path.get().strip():
+        if not source_raw:
             messagebox.showwarning("Brak danych", "Wybierz plik wejściowy.")
             return
-        if not self.output_dir.get().strip():
+        if not output_raw:
             messagebox.showwarning("Brak danych", "Wybierz katalog zapisu.")
             return
         if not target:
             messagebox.showwarning("Brak danych", "Wybierz format docelowy.")
             return
 
-        self.status.set("Trwa konwersja…")
-        self.update_idletasks()
+        source = Path(source_raw)
+        output = Path(output_raw)
+        planned = planned_output(source, target, output)
+        overwrite = True
 
-        try:
-            result = execute(
-                ConversionRequest(
-                    source=source,
-                    target_format=target,
-                    output_dir=output,
-                )
+        if planned.exists():
+            choice = messagebox.askyesnocancel(
+                "Plik już istnieje",
+                f"Plik docelowy już istnieje:\n{planned}\n\n"
+                "Tak — nadpisz\n"
+                "Nie — zapisz pod bezpieczną nazwą (np. plik_1)\n"
+                "Anuluj — przerwij",
             )
-        except (FileNotFoundError, NotADirectoryError, ValueError, OSError, RuntimeError) as exc:
-            self.status.set(f"Błąd: {exc}")
-            messagebox.showerror("Konwersja nieudana", str(exc))
-            return
+            if choice is None:
+                self.status.set("Anulowano — plik nie został nadpisany.")
+                return
+            overwrite = bool(choice)
 
+        request = ConversionRequest(
+            source=source,
+            target_format=target,
+            output_dir=output,
+        )
+
+        self._set_busy(True)
+        self.status.set("Trwa konwersja…")
+
+        worker = threading.Thread(
+            target=self._convert_worker,
+            args=(request, overwrite),
+            daemon=True,
+        )
+        worker.start()
+
+    def _convert_worker(self, request: ConversionRequest, overwrite: bool) -> None:
+        try:
+            result = execute(request, overwrite=overwrite)
+        except (
+            FileNotFoundError,
+            NotADirectoryError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as exc:
+            self.after(0, self._on_error, str(exc))
+            return
+        self.after(0, self._on_success, result)
+
+    def _on_success(self, result: Path) -> None:
+        self._set_busy(False)
         self.status.set(f"Sukces — zapisano: {result}")
         messagebox.showinfo("Gotowe", f"Zapisano plik:\n{result}")
+
+    def _on_error(self, message: str) -> None:
+        self._set_busy(False)
+        self.status.set(f"Błąd: {message}")
+        messagebox.showerror("Konwersja nieudana", message)
 
 
 def run_app() -> None:

@@ -68,6 +68,10 @@ python main.py
 
 Wybierz plik → katalog zapisu → format z listy (tylko dozwolone pary) → **Konwertuj**.
 
+- lista formatów zależy od rozszerzenia pliku wejściowego
+- dłuższe konwersje (np. PDF) nie blokują okna (wątek roboczy)
+- gdy plik docelowy istnieje: nadpisanie, bezpieczna nazwa albo anulowanie
+
 ### CLI (bez GUI)
 
 ```bash
