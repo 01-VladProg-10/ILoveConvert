@@ -8,6 +8,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 import converter.converters  # noqa: F401 — rejestracja konwerterów
+from converter.logutil import log_error, setup_logging
 from converter.registry import (
     ConversionRequest,
     available_targets,
@@ -26,6 +27,7 @@ class ConverterApp(ttk.Frame):
         self.status = tk.StringVar(value="Gotowy — wybierz plik wejściowy.")
         self._busy = False
 
+        setup_logging()
         self._build()
         self.pack(fill=tk.BOTH, expand=True)
 
@@ -94,7 +96,10 @@ class ConverterApp(ttk.Frame):
                 self.convert_btn.state(["!disabled"])
         else:
             self.target_format.set("")
-            self.status.set("Brak obsługiwanych formatów dla tego pliku.")
+            self.status.set(
+                "Brak obsługiwanych formatów dla tego pliku. "
+                "Wybierz plik CSV, JSON, TXT, DOCX lub ODT."
+            )
             self.convert_btn.state(["disabled"])
 
     def _set_busy(self, busy: bool) -> None:
@@ -106,6 +111,11 @@ class ConverterApp(ttk.Frame):
         else:
             self.convert_btn.state(["disabled"])
 
+    def _show_validation_error(self, message: str) -> None:
+        log_error(f"Walidacja GUI: {message}")
+        self.status.set(f"Błąd: {message}")
+        messagebox.showwarning("Walidacja", message)
+
     def _convert(self) -> None:
         if self._busy:
             return
@@ -115,17 +125,41 @@ class ConverterApp(ttk.Frame):
         target = self.target_format.get().strip()
 
         if not source_raw:
-            messagebox.showwarning("Brak danych", "Wybierz plik wejściowy.")
+            self._show_validation_error(
+                "Nie wybrano pliku wejściowego. Kliknij „Wybierz…” przy pliku."
+            )
             return
         if not output_raw:
-            messagebox.showwarning("Brak danych", "Wybierz katalog zapisu.")
+            self._show_validation_error(
+                "Nie wybrano katalogu zapisu. Kliknij „Wybierz…” przy katalogu."
+            )
             return
         if not target:
-            messagebox.showwarning("Brak danych", "Wybierz format docelowy.")
+            self._show_validation_error(
+                "Nie wybrano formatu docelowego. Wybierz wartość z listy."
+            )
             return
 
         source = Path(source_raw)
         output = Path(output_raw)
+        request = ConversionRequest(
+            source=source,
+            target_format=target,
+            output_dir=output,
+        )
+
+        try:
+            request.validate()
+        except (
+            FileNotFoundError,
+            NotADirectoryError,
+            ValueError,
+            PermissionError,
+            OSError,
+        ) as exc:
+            self._show_validation_error(str(exc))
+            return
+
         planned = planned_output(source, target, output)
         overwrite = True
 
@@ -141,12 +175,6 @@ class ConverterApp(ttk.Frame):
                 self.status.set("Anulowano — plik nie został nadpisany.")
                 return
             overwrite = bool(choice)
-
-        request = ConversionRequest(
-            source=source,
-            target_format=target,
-            output_dir=output,
-        )
 
         self._set_busy(True)
         self.status.set("Trwa konwersja…")
@@ -165,6 +193,7 @@ class ConverterApp(ttk.Frame):
             FileNotFoundError,
             NotADirectoryError,
             ValueError,
+            PermissionError,
             OSError,
             RuntimeError,
         ) as exc:

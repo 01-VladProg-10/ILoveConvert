@@ -1,4 +1,4 @@
-"""Proste CLI do demonstracji konwersji bez GUI (Lab 2).
+"""Proste CLI do demonstracji konwersji bez GUI.
 
 Przykłady:
   python run_cli.py data/sample.csv .json output
@@ -10,14 +10,19 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Import konwerterów rejestruje je w REGISTRY
 import converter.converters  # noqa: F401
+from converter.logutil import setup_logging
 from converter.registry import ConversionRequest, available_targets, execute
 
 
 def main() -> int:
+    setup_logging()
+
     if len(sys.argv) != 4:
-        print("Użycie: python run_cli.py <plik_wejściowy> <format_docelowy> <katalog_wyjściowy>")
+        print(
+            "Użycie: python run_cli.py <plik_wejściowy> <format_docelowy> "
+            "<katalog_wyjściowy>"
+        )
         print("Przykład: python run_cli.py data/sample.csv .json output")
         return 1
 
@@ -38,7 +43,14 @@ def main() -> int:
                 output_dir=output_dir,
             )
         )
-    except (FileNotFoundError, NotADirectoryError, ValueError, OSError) as exc:
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        ValueError,
+        PermissionError,
+        OSError,
+        RuntimeError,
+    ) as exc:
         print(f"Błąd: {exc}")
         return 1
 

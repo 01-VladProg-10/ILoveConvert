@@ -71,6 +71,8 @@ Wybierz plik → katalog zapisu → format z listy (tylko dozwolone pary) → **
 - lista formatów zależy od rozszerzenia pliku wejściowego
 - dłuższe konwersje (np. PDF) nie blokują okna (wątek roboczy)
 - gdy plik docelowy istnieje: nadpisanie, bezpieczna nazwa albo anulowanie
+- walidacja: istnienie pliku/katalogu, rozszerzenie, para formatów, uprawnienia zapisu
+- błędy i przebieg operacji trafiają do `conversion.log` (plik lokalny, w `.gitignore`)
 
 ### CLI (bez GUI)
 
@@ -94,6 +96,7 @@ python run_cli.py data/sample.odt .pdf output
 ```
 converter/           # logika konwersji (bez GUI)
   registry.py        # rejestr, walidacja, execute
+  logutil.py         # logowanie do conversion.log
   libreoffice.py     # wykrywanie soffice
   converters/        # konkretne konwertery
 gui/                 # interfejs Tkinter
