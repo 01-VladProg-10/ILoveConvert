@@ -1,8 +1,6 @@
-"""Proste CLI do demonstracji konwersji bez GUI.
+"""CLI bez GUI — demonstracja konwersji.
 
-Przykłady:
-  python run_cli.py data/sample.csv .json output
-  python run_cli.py data/sample.json .csv output
+Przykład: python run_cli.py data/sample.csv .json output
 """
 
 from __future__ import annotations
@@ -11,46 +9,27 @@ import sys
 from pathlib import Path
 
 import converter.converters  # noqa: F401
-from converter.logutil import setup_logging
 from converter.registry import ConversionRequest, available_targets, execute
 
 
 def main() -> int:
-    setup_logging()
-
     if len(sys.argv) != 4:
-        print(
-            "Użycie: python run_cli.py <plik_wejściowy> <format_docelowy> "
-            "<katalog_wyjściowy>"
-        )
+        print("Użycie: python run_cli.py <plik> <format> <katalog>")
         print("Przykład: python run_cli.py data/sample.csv .json output")
         return 1
 
     source = Path(sys.argv[1])
-    target_format = sys.argv[2]
-    if not target_format.startswith("."):
-        target_format = f".{target_format}"
+    target = sys.argv[2] if sys.argv[2].startswith(".") else f".{sys.argv[2]}"
     output_dir = Path(sys.argv[3])
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Dostępne formaty dla {source.name}: {available_targets(source)}")
-
+    print(f"Dostępne formaty: {available_targets(source)}")
     try:
         result = execute(
-            ConversionRequest(
-                source=source,
-                target_format=target_format,
-                output_dir=output_dir,
-            )
+            ConversionRequest(source, target, output_dir),
+            overwrite=True,
         )
-    except (
-        FileNotFoundError,
-        NotADirectoryError,
-        ValueError,
-        PermissionError,
-        OSError,
-        RuntimeError,
-    ) as exc:
+    except Exception as exc:
         print(f"Błąd: {exc}")
         return 1
 

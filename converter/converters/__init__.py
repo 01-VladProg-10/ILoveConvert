@@ -1,7 +1,3 @@
-"""Moduły konkretnych konwerterów — import rejestruje je w REGISTRY."""
+"""Import rejestruje konwertery w REGISTRY."""
 
-from converter.converters import csv_json  # noqa: F401
-from converter.converters import office_pdf  # noqa: F401
-from converter.converters import text_docx  # noqa: F401
-
-__all__ = ["csv_json", "text_docx", "office_pdf"]
+from converter.converters import csv_json, office_pdf, text_docx  # noqa: F401

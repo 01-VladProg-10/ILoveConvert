@@ -6,7 +6,5 @@
 | `sample.json` | Grupa A, ta sama treść co CSV | JSON→CSV: nagłówek zachowany, 4 wiersze, polskie znaki bez uszkodzenia |
 | `sample_bad.json` | Błędna składnia JSON | JSON→CSV: **brak pliku wynikowego**, kontrolowany `ValueError` (komunikat o JSON) |
 | `sample.txt` | Grupa B, akapity + polskie znaki | TXT→DOCX: dokument z akapitami odpowiadającymi liniom |
-| `sample.docx` | Grupa B/C | DOCX→TXT: tekst z akapitów; DOCX→PDF: otwieralny PDF (wymaga LibreOffice) |
-| `sample.odt` | Grupa C | ODT→PDF: otwieralny PDF (wymaga LibreOffice) |
-
-Minimalny zestaw do demonstracji: `sample.csv`, `sample.txt`, `sample.docx` (trzy grupy).
+| `sample.docx` | Grupa B/C | DOCX→TXT / DOCX→PDF (PDF wymaga LibreOffice) |
+| `sample.odt` | Grupa C | ODT→PDF (wymaga LibreOffice) |

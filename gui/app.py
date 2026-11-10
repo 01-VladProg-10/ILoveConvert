@@ -1,4 +1,4 @@
-"""Okno główne aplikacji — wybór pliku, katalogu i formatu docelowego."""
+"""GUI Tkinter — wybór pliku, katalogu i formatu docelowego."""
 
 from __future__ import annotations
 
@@ -7,8 +7,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-import converter.converters  # noqa: F401 — rejestracja konwerterów
-from converter.logutil import log_error, setup_logging
+import converter.converters  # noqa: F401
 from converter.registry import (
     ConversionRequest,
     available_targets,
@@ -20,14 +19,11 @@ from converter.registry import (
 class ConverterApp(ttk.Frame):
     def __init__(self, master: tk.Tk) -> None:
         super().__init__(master, padding=12)
-        self.master = master
         self.source_path = tk.StringVar()
         self.output_dir = tk.StringVar()
         self.target_format = tk.StringVar()
         self.status = tk.StringVar(value="Gotowy — wybierz plik wejściowy.")
         self._busy = False
-
-        setup_logging()
         self._build()
         self.pack(fill=tk.BOTH, expand=True)
 
@@ -52,10 +48,7 @@ class ConverterApp(ttk.Frame):
 
         ttk.Label(self, text="Format docelowy:").grid(row=2, column=0, sticky=tk.W, pady=4)
         self.format_combo = ttk.Combobox(
-            self,
-            textvariable=self.target_format,
-            state="readonly",
-            width=20,
+            self, textvariable=self.target_format, state="readonly", width=20
         )
         self.format_combo.grid(row=2, column=1, sticky=tk.W, padx=6, pady=4)
 
@@ -75,10 +68,9 @@ class ConverterApp(ttk.Frame):
                 ("Wszystkie", "*.*"),
             ],
         )
-        if not path:
-            return
-        self.source_path.set(path)
-        self._refresh_targets()
+        if path:
+            self.source_path.set(path)
+            self._refresh_targets()
 
     def _choose_output_dir(self) -> None:
         path = filedialog.askdirectory(title="Wybierz katalog zapisu")
@@ -96,25 +88,12 @@ class ConverterApp(ttk.Frame):
                 self.convert_btn.state(["!disabled"])
         else:
             self.target_format.set("")
-            self.status.set(
-                "Brak obsługiwanych formatów dla tego pliku. "
-                "Wybierz plik CSV, JSON, TXT, DOCX lub ODT."
-            )
+            self.status.set("Brak obsługiwanych formatów dla tego pliku.")
             self.convert_btn.state(["disabled"])
 
     def _set_busy(self, busy: bool) -> None:
         self._busy = busy
-        if busy:
-            self.convert_btn.state(["disabled"])
-        elif self.target_format.get():
-            self.convert_btn.state(["!disabled"])
-        else:
-            self.convert_btn.state(["disabled"])
-
-    def _show_validation_error(self, message: str) -> None:
-        log_error(f"Walidacja GUI: {message}")
-        self.status.set(f"Błąd: {message}")
-        messagebox.showwarning("Walidacja", message)
+        self.convert_btn.state(["disabled"] if busy else ["!disabled"])
 
     def _convert(self) -> None:
         if self._busy:
@@ -123,80 +102,34 @@ class ConverterApp(ttk.Frame):
         source_raw = self.source_path.get().strip()
         output_raw = self.output_dir.get().strip()
         target = self.target_format.get().strip()
-
-        if not source_raw:
-            self._show_validation_error(
-                "Nie wybrano pliku wejściowego. Kliknij „Wybierz…” przy pliku."
-            )
-            return
-        if not output_raw:
-            self._show_validation_error(
-                "Nie wybrano katalogu zapisu. Kliknij „Wybierz…” przy katalogu."
-            )
-            return
-        if not target:
-            self._show_validation_error(
-                "Nie wybrano formatu docelowego. Wybierz wartość z listy."
-            )
+        if not source_raw or not output_raw or not target:
+            messagebox.showwarning("Brak danych", "Uzupełnij plik, katalog i format.")
             return
 
         source = Path(source_raw)
         output = Path(output_raw)
-        request = ConversionRequest(
-            source=source,
-            target_format=target,
-            output_dir=output,
-        )
-
-        try:
-            request.validate()
-        except (
-            FileNotFoundError,
-            NotADirectoryError,
-            ValueError,
-            PermissionError,
-            OSError,
-        ) as exc:
-            self._show_validation_error(str(exc))
-            return
-
         planned = planned_output(source, target, output)
-        overwrite = True
-
+        overwrite = False
         if planned.exists():
-            choice = messagebox.askyesnocancel(
+            if not messagebox.askyesno(
                 "Plik już istnieje",
-                f"Plik docelowy już istnieje:\n{planned}\n\n"
-                "Tak — nadpisz\n"
-                "Nie — zapisz pod bezpieczną nazwą (np. plik_1)\n"
-                "Anuluj — przerwij",
-            )
-            if choice is None:
+                f"Plik już istnieje:\n{planned}\n\nCzy nadpisać?",
+            ):
                 self.status.set("Anulowano — plik nie został nadpisany.")
                 return
-            overwrite = bool(choice)
+            overwrite = True
 
+        request = ConversionRequest(source, target, output)
         self._set_busy(True)
         self.status.set("Trwa konwersja…")
+        threading.Thread(
+            target=self._worker, args=(request, overwrite), daemon=True
+        ).start()
 
-        worker = threading.Thread(
-            target=self._convert_worker,
-            args=(request, overwrite),
-            daemon=True,
-        )
-        worker.start()
-
-    def _convert_worker(self, request: ConversionRequest, overwrite: bool) -> None:
+    def _worker(self, request: ConversionRequest, overwrite: bool) -> None:
         try:
             result = execute(request, overwrite=overwrite)
-        except (
-            FileNotFoundError,
-            NotADirectoryError,
-            ValueError,
-            PermissionError,
-            OSError,
-            RuntimeError,
-        ) as exc:
+        except Exception as exc:
             self.after(0, self._on_error, str(exc))
             return
         self.after(0, self._on_success, result)
