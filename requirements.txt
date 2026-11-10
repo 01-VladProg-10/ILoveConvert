@@ -1,5 +1,8 @@
-# Zależności Pythona
+# Zależności Pythona (pip)
 python-docx>=1.1.0
 
-# LibreOffice — zależność systemowa (nie pip):
-# https://www.libreoffice.org/
+# Testy: unittest ze standardowej biblioteki Pythona (bez dodatkowych pakietów)
+
+# Zależność systemowa (nie pip):
+# LibreOffice — https://www.libreoffice.org/
+# Opcjonalnie: LIBREOFFICE_PATH=C:\Program Files\LibreOffice\program\soffice.exe
